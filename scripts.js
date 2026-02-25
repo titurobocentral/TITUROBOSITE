@@ -1,123 +1,103 @@
-// Mobile menu toggle
-const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-const mobileMenu = document.getElementById('mobile-menu');
+// scripts.js
+document.addEventListener("DOMContentLoaded", () => {
 
-if (mobileMenuBtn) {
-  mobileMenuBtn.addEventListener('click', () => {
-    mobileMenuBtn.classList.toggle('open');
-    mobileMenu.classList.toggle('open');
-  });
+  /* =====================================================
+     MOBILE MENU
+  ===================================================== */
+  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
 
-  // Close menu when a link is clicked
-  const mobileLinks = mobileMenu.querySelectorAll('a');
-  mobileLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      mobileMenuBtn.classList.remove('open');
-      mobileMenu.classList.remove('open');
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener("click", () => {
+      mobileMenuBtn.classList.toggle("open");
+      mobileMenu.classList.toggle("open");
     });
-  });
-}
 
-// Set active nav link based on current page
-function setActiveNavLink() {
+    mobileMenu.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
+        mobileMenuBtn.classList.remove("open");
+        mobileMenu.classList.remove("open");
+      });
+    });
+  }
+
+  /* =====================================================
+     ACTIVE NAV LINK HIGHLIGHT
+  ===================================================== */
   const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll('.nav-links a, #mobile-menu a');
+  const navLinks = document.querySelectorAll(".nav-links a, #mobile-menu a");
 
   navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.href.includes(currentPath) ||
-        (currentPath === '/' && link.href.includes('index'))) {
-      link.classList.add('active');
+    link.classList.remove("active");
+    if (
+      link.href.includes(currentPath) ||
+      (currentPath === "/" && link.href.includes("index"))
+    ) {
+      link.classList.add("active");
     }
   });
-}
 
-setActiveNavLink();
-
-// Gallery filter functionality
-const filterButtons = document.querySelectorAll('.filter-btn');
-const galleryItems = document.querySelectorAll('[data-category]');
-
-filterButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    // Update active button
-    filterButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    // Filter items
-    const filter = btn.getAttribute('data-filter');
-    galleryItems.forEach(item => {
-      if (!filter || item.getAttribute('data-category') === filter) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
+  /* =====================================================
+     SMOOTH SCROLL
+  ===================================================== */
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener("click", e => {
+      e.preventDefault();
+      const target = document.querySelector(anchor.getAttribute("href"));
+      if (target) target.scrollIntoView({ behavior: "smooth" });
     });
   });
-});
 
-// Gallery modal
-const galleryItemsClickable = document.querySelectorAll('.gallery-item');
-const imageModal = document.getElementById('imageModal');
-const modalImage = document.getElementById('modalImage');
-const modalCaption = document.getElementById('modalCaption');
-const modalClose = document.querySelector('.modal-close');
+  /* =====================================================
+     MULTIPLE SLIDERS
+  ===================================================== */
+  document.querySelectorAll(".slider").forEach(slider => {
+    const slides = slider.querySelectorAll(".slide");
+    const prevBtn = slider.querySelector(".prev");
+    const nextBtn = slider.querySelector(".next");
+    const dotsContainer = slider.querySelector(".dots");
 
-galleryItemsClickable.forEach(item => {
-  item.addEventListener('click', () => {
-    const img = item.querySelector('img');
-    const caption = item.querySelector('.gallery-overlay')?.textContent || 'Gallery image';
+    let currentIndex = 0;
+    let autoSlide;
 
-    modalImage.src = img.src;
-    modalImage.alt = img.alt;
-    modalCaption.textContent = caption;
-    imageModal.classList.add('open');
-  });
-});
+    // Create navigation dots
+    slides.forEach((_, i) => {
+      const dot = document.createElement("span");
+      dot.classList.add("dot");
+      if (i === 0) dot.classList.add("active");
+      dot.addEventListener("click", () => showSlide(i));
+      dotsContainer.appendChild(dot);
+    });
+    const dots = dotsContainer.querySelectorAll(".dot");
 
-if (modalClose) {
-  modalClose.addEventListener('click', () => {
-    imageModal.classList.remove('open');
-  });
-}
-
-if (imageModal) {
-  imageModal.addEventListener('click', (e) => {
-    if (e.target === imageModal) {
-      imageModal.classList.remove('open');
+    function showSlide(index) {
+      slides.forEach(slide => slide.classList.remove("active"));
+      dots.forEach(dot => dot.classList.remove("active"));
+      currentIndex = index;
+      slides[currentIndex].classList.add("active");
+      dots[currentIndex].classList.add("active");
     }
-  });
-}
 
-// Close modal on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && imageModal) {
-    imageModal.classList.remove('open');
-  }
-});
-
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+    function nextSlide() {
+      showSlide((currentIndex + 1) % slides.length);
     }
-  });
-});
 
-// Form submission (if applicable)
-const form = document.querySelector('form');
-if (form) {
-  form.addEventListener('submit', (e) => {
-    // Form will submit to the action URL
-    // Add any custom handling here if needed
-  });
-}
+    function prevSlide() {
+      showSlide((currentIndex - 1 + slides.length) % slides.length);
+    }
 
-// Stagger animation for stat items
-const stats = document.querySelectorAll('.stat');
-stats.forEach((stat, index) => {
-  stat.style.animationDelay = `${index * 0.1}s`;
+    nextBtn?.addEventListener("click", nextSlide);
+    prevBtn?.addEventListener("click", prevSlide);
+
+    // Auto-slide functionality
+    function startAuto() { autoSlide = setInterval(nextSlide, 5000); }
+    function stopAuto() { clearInterval(autoSlide); }
+
+    slider.addEventListener("mouseenter", stopAuto);
+    slider.addEventListener("mouseleave", startAuto);
+
+    showSlide(0);
+    startAuto();
+  });
+
 });
